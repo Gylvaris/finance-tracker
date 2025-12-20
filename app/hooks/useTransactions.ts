@@ -1,26 +1,31 @@
-// hooks/useExpenses.ts
+// hooks/useTransactions.ts
 import { useState, useEffect } from "react";
-import { Expense } from "../types";
+import { Transaction } from "../types";
 
 const DEFAULT_CATEGORIES = ["Food", "Transport", "Entertainment", "Bills"];
 
-export function useExpenses() {
+export function useTransactions() {
     // State
-    const [expenses, setExpenses] = useState<Expense[]>([]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [sortBy, setSortBy] = useState("");
     const [showSortMenu, setShowSortMenu] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
+
+    // Date Logic
     const currentMonth = new Date().toISOString().slice(0, 7);
     const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+
+    // Category Logic
     const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
 
+    // 1. Load Data
     useEffect(() => {
-        const savedData = localStorage.getItem("my-expenses");
+        const savedData = localStorage.getItem("my-transactions");
         const savedCategories = localStorage.getItem("my-categories");
 
         if (savedData) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
-            setExpenses(JSON.parse(savedData));
+            setTransactions(JSON.parse(savedData));
         }
 
         if (savedCategories) {
@@ -30,12 +35,14 @@ export function useExpenses() {
         setIsLoaded(true);
     }, [])
 
+    // 2. Save Transactions
     useEffect(() => {
         if (isLoaded) {
-            localStorage.setItem("my-expenses", JSON.stringify(expenses));
+            localStorage.setItem("my-transactions", JSON.stringify(transactions));
         }
-    }, [expenses, isLoaded])
+    }, [transactions, isLoaded])
 
+    // 3. Save Categories
     useEffect(() => {
         if (isLoaded) {
             localStorage.setItem("my-categories", JSON.stringify(categories))
@@ -51,23 +58,22 @@ export function useExpenses() {
     };
 
     const handleDelete = (id: number) => {
-        setExpenses((prev) => prev.filter((exp) => exp.id !== id));
+        setTransactions((prev) => prev.filter((t) => t.id !== id));
     };
 
-    const editExpense = (id: number, updatedExpense: Partial<Expense>) => {
-        setExpenses((prev) =>
-            prev.map((exp) =>
-                exp.id === id ? { ...exp, ...updatedExpense } : exp
+    const editTransaction = (id: number, updatedTransaction: Partial<Transaction>) => {
+        setTransactions((prev) =>
+            prev.map((t) =>
+                t.id === id ? { ...t, ...updatedTransaction } : t
             )
         );
     }
 
-    const filteredExpenses = expenses.filter(exp => {
-        // Safety check: Does date exist? AND Does it match?
-        return exp.date && exp.date.startsWith(selectedMonth);
+    const filteredTransactions = transactions.filter(t => {
+        return t.date && t.date.startsWith(selectedMonth);
     });
 
-    const sortedExpenses = [...filteredExpenses].sort((a, b) => {
+    const sortedTransactions = [...filteredTransactions].sort((a, b) => {
         switch (sortBy) {
             case "amount-asc": return a.amount - b.amount;
             case "amount-desc": return b.amount - a.amount;
@@ -77,36 +83,37 @@ export function useExpenses() {
         }
     });
 
-    const categoryTotals = filteredExpenses.reduce((acc: Record<string, number>, expense) => {
-        const category = expense.category;
+    const categoryTotals = filteredTransactions
+        .filter(t => t.type === "expense")
+        .reduce((acc: Record<string, number>, t) => {
+            const category = t.category;
+            if (!acc[category]) {
+                acc[category] = 0;
+            }
+            acc[category] += t.amount;
+            return acc;
+        }, {});
 
-        // If we haven't seen this category before, start it at 0
-        if (!acc[category]) {
-            acc[category] = 0;
+    const monthlyTotal = filteredTransactions.reduce((sum, t) => {
+        if (t.type === "income") {
+            return sum + t.amount;
+        } else {
+            return sum - t.amount;
         }
+    }, 0);
 
-        // Add the current expense amount to the total
-        acc[category] += expense.amount;
-
-        return acc;
-    }, {});
-
-    const monthlyTotal = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-
-    // 4. Return the things the UI needs
     return {
-        expenses,
-        addCategory,
-        sortedExpenses,
+        transactions,
+        setTransactions,
+        sortedTransactions,
         categoryTotals,
         monthlyTotal,
         selectedMonth,
-        categories,
         setSelectedMonth,
-        setExpenses,
+        categories,
+        addCategory,
         handleDelete,
-        editExpense,
-
+        editTransaction,
         sortBy,
         setSortBy,
         showSortMenu,

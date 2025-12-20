@@ -1,25 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { useExpenses } from "../hooks/useExpenses";
+import { useTransactions } from "../hooks/useTransactions";
 
 export default function ExpensesPage() {
     const {
-    expenses, 
-    setExpenses,
+    transactions, 
+    setTransactions,
+    sortedTransactions, // Renamed
     selectedMonth,
     categories,
     addCategory,
     setSelectedMonth,
-    sortedExpenses,
     categoryTotals,
     monthlyTotal,
     handleDelete, 
-    editExpense, 
+    editTransaction, // Renamed
     setSortBy, 
     showSortMenu, 
     setShowSortMenu 
-  } = useExpenses();
+  } = useTransactions();
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -28,6 +28,8 @@ export default function ExpensesPage() {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
   const [date, setDate] = useState(today);
+  const [type, setType] = useState<"income" | "expense">("expense");
+
 
   // Handlers
   const handleSubmit = (e: React.FormEvent) => {
@@ -40,13 +42,14 @@ export default function ExpensesPage() {
       return
     }
 
-    setExpenses((prev) => [
+    setTransactions((prev) => [
       {
         id: Date.now(),
         title,
         amount: parsedAmount,
         category,
         date,
+        type, // <--- THE FIX: We hardcode this for now!
       },
       ...prev,
     ]);
@@ -76,6 +79,30 @@ export default function ExpensesPage() {
       </div>
 
       <h1 className="text-4xl text-amber-500 font-bold mb-8">Expenses</h1>
+
+      {/* Type Toggles */}
+  <div className="flex gap-4 mb-6 bg-neutral-900 p-1 rounded-lg border border-neutral-800 inline-flex">
+    <button
+      onClick={() => setType("expense")}
+      className={`px-6 py-2 rounded-md font-medium transition ${
+        type === "expense"
+          ? "bg-red-600 text-white shadow-lg"
+          : "text-gray-400 hover:text-white"
+      }`}
+    >
+      Expense
+    </button>
+    <button
+      onClick={() => setType("income")}
+      className={`px-6 py-2 rounded-md font-medium transition ${
+        type === "income"
+          ? "bg-green-600 text-white shadow-lg"
+          : "text-gray-400 hover:text-white"
+      }`}
+    >
+      Income
+    </button>
+  </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-5 mb-10">
@@ -160,7 +187,7 @@ export default function ExpensesPage() {
       {/* Category Breakdown */}
       <div className="grid grid-cols-2 gap-4 mb-8">
         {Object.entries(categoryTotals)
-    .sort() // <--- Adds default A-Z sorting
+    .sort() 
     .map(([cat, amount]) => (
           <div key={cat} className={`${cardClass} flex justify-between`}>
             <span className="text-gray-400">{cat}</span>
@@ -225,12 +252,12 @@ export default function ExpensesPage() {
         </div>
       </div>
 
-      {/* Expense List */}
-      {expenses.length === 0 ? (
-        <p className="text-gray-400">No expenses yet.</p>
+      {/* Transaction List */}
+      {transactions.length === 0 ? (
+        <p className="text-gray-400">No transactions yet.</p>
       ) : (
         <ul className="space-y-3">
-          {sortedExpenses.map((exp) => (
+          {sortedTransactions.map((exp) => (
             <li key={exp.id} className={`${cardClass} flex justify-between items-center`}>
               <div className="flex flex-col gap-1">
                 <span className="font-medium text-lg">{exp.title}</span>
@@ -243,7 +270,9 @@ export default function ExpensesPage() {
               </div>
 
               <div className="flex items-center gap-4">
-                <strong className="text-lg">{exp.amount} zł</strong>
+                <strong className={`text-lg ${exp.type === "income" ? "text-green-500" : "text-white"}`}>
+  {exp.type === "income" ? "+" : "-"}{exp.amount} zł
+</strong>
                 <button
                   onClick={() => {
                     const newTitle = prompt("Enter new title", exp.title);
@@ -260,7 +289,7 @@ export default function ExpensesPage() {
                         return;
                       }
 
-                      editExpense(exp.id, {
+                      editTransaction(exp.id, {
                         title: newTitle,
                         amount: parsedNewAmount,
                         category: newCategory,
