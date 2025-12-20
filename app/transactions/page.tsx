@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useTransactions } from "../hooks/useTransactions";
-import { formatCurrency, formatDate } from "../lib/formatters";
+import { formatCurrency } from "../lib/formatters";
+import TransactionList from "../components/TransactionList";
 
 export default function ExpensesPage() {
     const {
-    transactions, 
     setTransactions,
     sortedTransactions, // Renamed
     selectedMonth,
@@ -254,65 +254,15 @@ export default function ExpensesPage() {
       </div>
 
       {/* Transaction List */}
-      {transactions.length === 0 ? (
-        <p className="text-gray-400">No transactions yet.</p>
-      ) : (
-        <ul className="space-y-3">
-          {sortedTransactions.map((exp) => (
-            <li key={exp.id} className={`${cardClass} flex justify-between items-center`}>
-              <div className="flex flex-col gap-1">
-                <span className="font-medium text-lg">{exp.title}</span>
-                
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-                  <span>{formatDate(exp.date)}</span>
-                  <span>•</span> {/* A little visual separator */}
-                  <span>{exp.category}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <strong className={`text-lg ${exp.type === "income" ? "text-green-500" : "text-white"}`}>
-  {exp.type === "income" ? "+" : "-"}{formatCurrency(exp.amount)}
-</strong>
-                <button
-                  onClick={() => {
-                    const newTitle = prompt("Enter new title", exp.title);
-                    const newAmount = prompt("Enter new amount", exp.amount.toString());
-                    const newCategory = prompt("Enter new category", exp.category);
-                    const newDate = prompt("Enter new date", exp.date);
-
-                    if (newTitle && newAmount && newCategory && newDate) {
-
-                      const parsedNewAmount = parseFloat(newAmount);
-
-                      if (isNaN(parsedNewAmount) || parsedNewAmount <= 0 ) {
-                        alert("Please enter a valid number")
-                        return;
-                      }
-
-                      editTransaction(exp.id, {
-                        title: newTitle,
-                        amount: parsedNewAmount,
-                        category: newCategory,
-                        date: newDate,
-                      });
-                    }
-                  }}
-                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-500 transition"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(exp.id)}
-                  className="px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-500 transition"
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+  {sortedTransactions.length === 0 ? (
+    <p className="text-gray-400">No transactions yet.</p>
+  ) : (
+    <TransactionList 
+      transactions={sortedTransactions}
+      onDelete={handleDelete}
+      onEdit={editTransaction}
+    />
+  )}
     </main>
   );
 }
