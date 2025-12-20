@@ -81,7 +81,7 @@ export default function ExpensesPage() {
       <h1 className="text-4xl text-amber-500 font-bold mb-8">Expenses</h1>
 
       {/* Type Toggles */}
-  <div className="flex gap-4 mb-6 bg-neutral-900 p-1 rounded-lg border border-neutral-800 inline-flex">
+  <div className="gap-4 mb-6 bg-neutral-900 p-1 rounded-lg border border-neutral-800 inline-flex">
     <button
       onClick={() => setType("expense")}
       className={`px-6 py-2 rounded-md font-medium transition ${
