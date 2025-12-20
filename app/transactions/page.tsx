@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTransactions } from "../hooks/useTransactions";
+import { formatCurrency, formatDate } from "../lib/formatters";
 
 export default function ExpensesPage() {
     const {
@@ -181,7 +182,7 @@ export default function ExpensesPage() {
       {/* Total */}
       <section className={`${cardClass} mb-8`}>
         <h2 className="text-lg font-semibold mb-1">Total Expenses</h2>
-        <p className="text-3xl font-bold">{monthlyTotal.toLocaleString("pl-PL")} zł</p>
+        <p className="text-3xl font-bold">{formatCurrency(monthlyTotal)}</p>
       </section>
 
       {/* Category Breakdown */}
@@ -191,7 +192,7 @@ export default function ExpensesPage() {
     .map(([cat, amount]) => (
           <div key={cat} className={`${cardClass} flex justify-between`}>
             <span className="text-gray-400">{cat}</span>
-            <span className="font-bold">{amount.toLocaleString("pl-PL")} zł</span>
+            <span className="font-bold">{formatCurrency(amount)}</span>
           </div>
         ))}
       </div>
@@ -263,7 +264,7 @@ export default function ExpensesPage() {
                 <span className="font-medium text-lg">{exp.title}</span>
                 
                 <div className="flex items-center gap-2 text-xs text-gray-400">
-                  <span>{new Date(exp.date).toLocaleDateString('pl-PL')}</span>
+                  <span>{formatDate(exp.date)}</span>
                   <span>•</span> {/* A little visual separator */}
                   <span>{exp.category}</span>
                 </div>
@@ -271,7 +272,7 @@ export default function ExpensesPage() {
 
               <div className="flex items-center gap-4">
                 <strong className={`text-lg ${exp.type === "income" ? "text-green-500" : "text-white"}`}>
-  {exp.type === "income" ? "+" : "-"}{exp.amount} zł
+  {exp.type === "income" ? "+" : "-"}{formatCurrency(exp.amount)}
 </strong>
                 <button
                   onClick={() => {
