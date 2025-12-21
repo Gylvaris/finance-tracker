@@ -2,10 +2,11 @@
 
 import { useTransactions } from "../hooks/useTransactions";
 import { formatCurrency } from "../lib/formatters";
+import ExpenseChart from "../components/ExpenseChart";
 
 export default function Dashboard() {
 
-    const { transactions } = useTransactions();
+    const { transactions, categoryTotals } = useTransactions();
     const totalIncome = transactions.reduce((sum, t) => {
     if (t.type === "income") {
         return sum + t.amount;
@@ -21,6 +22,11 @@ export default function Dashboard() {
   }, 0);
 
   const balance = totalIncome - totalExpenses;
+
+  const chartData = Object.entries(categoryTotals).map(([name, value]) => ({
+    name,
+    value: value as number,
+  }));
 
     return(
         <main className="p-8 max-w-4xl mx-auto font-sans text-white">
@@ -51,8 +57,13 @@ export default function Dashboard() {
             {formatCurrency(balance)}
           </p>
         </div>
-
       </div>
+
+      {/* Chart Section */}
+  <section className="mt-8 p-8 rounded-xl bg-neutral-900 border border-neutral-800">
+    <h2 className="text-xl font-bold mb-6">Expense Breakdown</h2>
+    <ExpenseChart data={chartData} />
+  </section>
     </main>
     );
 }
