@@ -27,7 +27,7 @@ export default function TransactionList({ transactions, onDelete, onEdit }: Tran
           <div className="flex items-center gap-4">
             <strong
               className={`text-lg ${
-                exp.type === "income" ? "text-green-500" : "text-white"
+                exp.type === "income" ? "text-green-500" : "text-red-500"
               }`}
             >
               {exp.type === "income" ? "+" : "-"}
