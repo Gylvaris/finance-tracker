@@ -1,4 +1,3 @@
-// hooks/useTransactions.ts
 import { useState, useEffect } from "react";
 import { Transaction } from "../types";
 
@@ -18,7 +17,7 @@ export function useTransactions() {
     // Category Logic
     const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
 
-    // 1. Load Data
+    // Load Data
     useEffect(() => {
         const savedData = localStorage.getItem("my-transactions");
         const savedCategories = localStorage.getItem("my-categories");
@@ -35,14 +34,14 @@ export function useTransactions() {
         setIsLoaded(true);
     }, [])
 
-    // 2. Save Transactions
+    // Save Transactions
     useEffect(() => {
         if (isLoaded) {
             localStorage.setItem("my-transactions", JSON.stringify(transactions));
         }
     }, [transactions, isLoaded])
 
-    // 3. Save Categories
+    // Save Categories
     useEffect(() => {
         if (isLoaded) {
             localStorage.setItem("my-categories", JSON.stringify(categories))

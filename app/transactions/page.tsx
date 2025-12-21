@@ -8,7 +8,7 @@ import TransactionList from "../components/TransactionList";
 export default function ExpensesPage() {
     const {
     setTransactions,
-    sortedTransactions, // Renamed
+    sortedTransactions,
     selectedMonth,
     categories,
     addCategory,
@@ -16,7 +16,7 @@ export default function ExpensesPage() {
     categoryTotals,
     monthlyTotal,
     handleDelete, 
-    editTransaction, // Renamed
+    editTransaction,
     setSortBy, 
     showSortMenu, 
     setShowSortMenu 
@@ -50,7 +50,7 @@ export default function ExpensesPage() {
         amount: parsedAmount,
         category,
         date,
-        type, // <--- THE FIX: We hardcode this for now!
+        type,
       },
       ...prev,
     ]);

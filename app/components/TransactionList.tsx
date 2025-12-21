@@ -8,7 +8,6 @@ type TransactionListProps = {
 };
 
 export default function TransactionList({ transactions, onDelete, onEdit }: TransactionListProps) {
-  // We need to define the style here because we moved the code!
   const cardClass = "bg-neutral-900 border border-neutral-700 p-4 rounded-md";
 
   return (
