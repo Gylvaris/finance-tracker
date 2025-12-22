@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Transaction } from "../types";
+import { TRANSACTION_TYPES } from "../lib/constants";
 
 type TransactionFormProps = {
   categories: string[];
@@ -21,7 +22,7 @@ export default function TransactionForm({
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
   const [date, setDate] = useState(today);
-  const [type, setType] = useState<"income" | "expense">("expense");
+  const [type, setType] = useState<"income" | "expense">(TRANSACTION_TYPES.EXPENSE);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,9 +56,9 @@ export default function TransactionForm({
       {/* Type Toggles */}
       <div className="gap-4 mb-6 bg-neutral-900 p-1 rounded-lg border border-neutral-800 inline-flex">
         <button
-          onClick={() => setType("expense")}
+          onClick={() => setType(TRANSACTION_TYPES.EXPENSE)}
           className={`px-6 py-2 rounded-md font-medium transition ${
-            type === "expense"
+            type === TRANSACTION_TYPES.EXPENSE
               ? "bg-red-600 text-white shadow-lg"
               : "text-gray-400 hover:text-white"
           }`}
@@ -65,9 +66,9 @@ export default function TransactionForm({
           Expense
         </button>
         <button
-          onClick={() => setType("income")}
+          onClick={() => setType(TRANSACTION_TYPES.INCOME)}
           className={`px-6 py-2 rounded-md font-medium transition ${
-            type === "income"
+            type === TRANSACTION_TYPES.INCOME
               ? "bg-green-600 text-white shadow-lg"
               : "text-gray-400 hover:text-white"
           }`}
@@ -146,7 +147,7 @@ export default function TransactionForm({
           type="submit"
           className="px-4 py-2 bg-amber-600 text-black font-semibold rounded-md hover:bg-amber-500 transition"
         >
-          Add {type === "income" ? "Income" : "Expense"}
+          Add {type === TRANSACTION_TYPES.INCOME ? "Income" : "Expense"}
         </button>
       </form>
     </div>
