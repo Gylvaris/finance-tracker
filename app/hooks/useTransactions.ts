@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Transaction } from "../types";
-
-const DEFAULT_CATEGORIES = ["Food", "Transport", "Entertainment", "Bills"];
+import { STORAGE_KEYS, DEFAULT_CATEGORIES, TRANSACTION_TYPES } from "../lib/constants";
 
 export function useTransactions() {
     // State
@@ -19,8 +18,8 @@ export function useTransactions() {
 
     // Load Data
     useEffect(() => {
-        const savedData = localStorage.getItem("my-transactions");
-        const savedCategories = localStorage.getItem("my-categories");
+        const savedData = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
+        const savedCategories = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
 
         if (savedData) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -37,14 +36,14 @@ export function useTransactions() {
     // Save Transactions
     useEffect(() => {
         if (isLoaded) {
-            localStorage.setItem("my-transactions", JSON.stringify(transactions));
+            localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
         }
     }, [transactions, isLoaded])
 
     // Save Categories
     useEffect(() => {
         if (isLoaded) {
-            localStorage.setItem("my-categories", JSON.stringify(categories))
+            localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories))
         }
     }, [categories, isLoaded])
 
@@ -83,7 +82,7 @@ export function useTransactions() {
     });
 
     const categoryTotals = filteredTransactions
-        .filter(t => t.type === "expense")
+        .filter(t => t.type === TRANSACTION_TYPES.EXPENSE)
         .reduce((acc: Record<string, number>, t) => {
             const category = t.category;
             if (!acc[category]) {
@@ -94,7 +93,7 @@ export function useTransactions() {
         }, {});
 
     const monthlyTotal = filteredTransactions.reduce((sum, t) => {
-        if (t.type === "income") {
+        if (t.type === TRANSACTION_TYPES.INCOME) {
             return sum + t.amount;
         } else {
             return sum - t.amount;
