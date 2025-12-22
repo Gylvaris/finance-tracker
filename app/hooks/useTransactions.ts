@@ -10,20 +10,14 @@ export function useTransactions() {
     const [showSortMenu, setShowSortMenu] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
 
-    // Date Logic
     const currentMonth = new Date().toISOString().slice(0, 7);
     const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
-    // Category Logic
     const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
 
-    // --- SUPABASE LOGIC (CLOUD) ---
-
-    // 1. Fetch Transactions from Cloud
     const fetchTransactions = useCallback(async () => {
-        // SQL: SELECT * FROM transactions ORDER BY date DESC
         const { data, error } = await supabase
-            .from('transactions') // Matches your table name
+            .from('transactions')
             .select('*')
             .order('date', { ascending: false });
 
@@ -34,15 +28,10 @@ export function useTransactions() {
         }
     }, []);
 
-    // 2. Run Fetch on Mount
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchTransactions();
     }, [fetchTransactions]);
-
-
-    // --- LOCAL STORAGE LOGIC (CATEGORIES ONLY) ---
-    // We keep this for now because we don't have a 'categories' table in Supabase yet.
 
     // Load Categories
     useEffect(() => {
@@ -72,40 +61,58 @@ export function useTransactions() {
         setCategories(prev => [...prev, categoryName])
     };
 
-    // CREATE (Insert)
+    // CREATE
     const addTransaction = async (newTransaction: Omit<Transaction, "id">) => {
-        // 1. Optimistic Update (Optional: Show it immediately before DB confirms)
-        // For now, let's wait for DB to be safe.
 
-        // 2. Send to Supabase
         const { data, error } = await supabase
             .from('transactions')
             .insert([newTransaction])
-            .select(); // <--- Important: Asks DB to send back the new row (with the ID)
+            .select();
 
         if (error) {
             console.error('Error adding transaction:', error);
             alert("Failed to save!");
         } else {
-            // 3. Update Local State with the REAL data from DB
             const savedTransaction = data[0] as Transaction;
             setTransactions((prev) => [savedTransaction, ...prev]);
         }
     };
 
-    // NOTE: These handle functions only update the UI state for now. 
-    // We will connect them to Supabase in the next step.
-    const handleDelete = (id: number) => {
+    // DELETE
+    const handleDelete = async (id: number) => {
         setTransactions((prev) => prev.filter((t) => t.id !== id));
+
+        const { error } = await supabase
+            .from('transactions')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error deleting transaction:', error);
+            alert("Failed to delete!");
+            fetchTransactions();
+        }
     };
 
-    const editTransaction = (id: number, updatedTransaction: Partial<Transaction>) => {
+    // UPDATE
+    const editTransaction = async (id: number, updatedFields: Partial<Transaction>) => {
         setTransactions((prev) =>
             prev.map((t) =>
-                t.id === id ? { ...t, ...updatedTransaction } : t
+                t.id === id ? { ...t, ...updatedFields } : t
             )
         );
-    }
+
+        const { error } = await supabase
+            .from('transactions')
+            .update(updatedFields)
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error updating transaction:', error);
+            alert("Failed to update!");
+            fetchTransactions();
+        }
+    };
 
     // --- CALCULATIONS ---
 
@@ -164,7 +171,7 @@ export function useTransactions() {
     return {
         addTransaction,
         transactions,
-        setTransactions, // We expose this so the UI can optimistic update
+        setTransactions,
         sortedTransactions,
         categoryTotals,
         monthlyTotal,
@@ -180,7 +187,6 @@ export function useTransactions() {
         setShowSortMenu,
         stats,
         balance,
-        // Optional: Expose the refresh function if we need to manually reload data
         refreshData: fetchTransactions
     };
 }
