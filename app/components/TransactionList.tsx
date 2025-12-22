@@ -26,14 +26,12 @@ export default function TransactionList({ transactions, onDelete, onEdit }: Tran
 
           <div className="flex items-center gap-4">
             <strong
-              className={`text-lg ${
-                exp.type === "income" ? "text-green-500" : "text-red-500"
-              }`}
+              className={`text-lg ${exp.type === "income" ? "text-green-500" : "text-red-500"}`}
             >
               {exp.type === "income" ? "+" : "-"}
               {formatCurrency(exp.amount)}
             </strong>
-            
+
             <button
               onClick={() => {
                 const newTitle = prompt("Enter new title", exp.title);
