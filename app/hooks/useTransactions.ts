@@ -8,7 +8,7 @@ export function useTransactions() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [sortBy, setSortBy] = useState("");
     const [showSortMenu, setShowSortMenu] = useState(false);
-    const [isLoaded, setIsLoaded] = useState(false);
+    const [isLoaded] = useState(false);
 
     const currentMonth = new Date().toISOString().slice(0, 7);
     const [selectedMonth, setSelectedMonth] = useState(currentMonth);
@@ -28,20 +28,30 @@ export function useTransactions() {
         }
     }, []);
 
+    const fetchCategories = useCallback(async () => {
+        const { data, error } = await supabase
+            .from('categories')
+            .select('*')
+            .order('name', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching categories:', error);
+        } else {
+            if (data) {
+                const categoryNames = data.map((c: { name: string }) => c.name);
+
+                const uniqueCategories = Array.from(new Set([...DEFAULT_CATEGORIES, ...categoryNames]));
+                setCategories(uniqueCategories);
+            }
+        }
+    }, []);
+
+
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchTransactions();
-    }, [fetchTransactions]);
-
-    // Load Categories
-    useEffect(() => {
-        const savedCategories = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
-        if (savedCategories) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setCategories(JSON.parse(savedCategories));
-        }
-        setIsLoaded(true);
-    }, []);
+        fetchCategories();
+    }, [fetchTransactions, fetchCategories]);
 
     // Save Categories
     useEffect(() => {
@@ -53,12 +63,23 @@ export function useTransactions() {
 
     // --- ACTIONS ---
 
-    const addCategory = (categoryName: string) => {
+    const addCategory = async (categoryName: string) => {
         if (categories.includes(categoryName)) {
-            alert("Don't add duplicates")
-            return
+            alert("Don't add duplicates");
+            return;
         }
-        setCategories(prev => [...prev, categoryName])
+
+        setCategories((prev) => [...prev, categoryName]);
+
+        const { error } = await supabase
+            .from('categories')
+            .insert([{ name: categoryName }]);
+
+        if (error) {
+            console.error('Error adding category:', error);
+            alert("Failed to save category!");
+            fetchCategories();
+        }
     };
 
     // CREATE
