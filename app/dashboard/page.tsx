@@ -5,22 +5,7 @@ import { formatCurrency } from "../lib/formatters";
 import ExpenseChart from "../components/ExpenseChart";
 
 export default function Dashboard() {
-  const { transactions, categoryTotals } = useTransactions();
-  const totalIncome = transactions.reduce((sum, t) => {
-    if (t.type === "income") {
-      return sum + t.amount;
-    }
-    return sum;
-  }, 0);
-
-  const totalExpenses = transactions.reduce((sum, t) => {
-    if (t.type === "expense") {
-      return sum + t.amount;
-    }
-    return sum;
-  }, 0);
-
-  const balance = totalIncome - totalExpenses;
+  const { stats, balance, categoryTotals } = useTransactions();
 
   const chartData = Object.entries(categoryTotals).map(([name, value]) => ({
     name,
@@ -35,13 +20,13 @@ export default function Dashboard() {
         {/* Income Card */}
         <div className="p-6 rounded-xl bg-neutral-900 border border-neutral-800">
           <h2 className="text-sm text-gray-400 font-medium mb-2">Total Income</h2>
-          <p className="text-3xl font-bold text-green-500">{formatCurrency(totalIncome)}</p>
+          <p className="text-3xl font-bold text-green-500">{formatCurrency(stats.income)}</p>
         </div>
 
         {/* Expense Card */}
         <div className="p-6 rounded-xl bg-neutral-900 border border-neutral-800">
           <h2 className="text-sm text-gray-400 font-medium mb-2">Total Expenses</h2>
-          <p className="text-3xl font-bold text-red-500">{formatCurrency(totalExpenses)}</p>
+          <p className="text-3xl font-bold text-red-500">{formatCurrency(stats.expense)}</p>
         </div>
 
         {/* Balance Card */}

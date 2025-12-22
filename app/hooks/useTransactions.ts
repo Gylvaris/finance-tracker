@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Transaction } from "../types";
 import { STORAGE_KEYS, DEFAULT_CATEGORIES, TRANSACTION_TYPES } from "../lib/constants";
 
@@ -100,6 +100,23 @@ export function useTransactions() {
         }
     }, 0);
 
+    // Calculate All-Time Stats
+    const stats = useMemo(() => {
+        return transactions.reduce(
+            (acc, t) => {
+                if (t.type === TRANSACTION_TYPES.INCOME) {
+                    acc.income += t.amount;
+                } else {
+                    acc.expense += t.amount;
+                }
+                return acc;
+            },
+            { income: 0, expense: 0 }
+        );
+    }, [transactions]);
+
+    const balance = stats.income - stats.expense;
+
     return {
         transactions,
         setTransactions,
@@ -115,6 +132,8 @@ export function useTransactions() {
         sortBy,
         setSortBy,
         showSortMenu,
-        setShowSortMenu
+        setShowSortMenu,
+        stats,
+        balance,
     };
 }
