@@ -8,7 +8,7 @@ import { Transaction } from "../types";
 
 export default function ExpensesPage() {
   const {
-    setTransactions,
+    addTransaction,
     sortedTransactions,
     selectedMonth,
     categories,
@@ -23,8 +23,9 @@ export default function ExpensesPage() {
     setShowSortMenu,
   } = useTransactions();
 
-  const handleAddTransaction = (newTransaction: Transaction) => {
-    setTransactions((prev) => [newTransaction, ...prev]);
+  // We accept everything EXCEPT the ID (Omit<Transaction, "id">)
+  const handleAddTransaction = async (newTransaction: Omit<Transaction, "id">) => {
+    await addTransaction(newTransaction);
   };
 
   // Reusable UI classes

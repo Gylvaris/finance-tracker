@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Transaction } from "../types";
 import { STORAGE_KEYS, DEFAULT_CATEGORIES, TRANSACTION_TYPES } from "../lib/constants";
+import { supabase } from "../lib/supabase";
 
 export function useTransactions() {
     // State
@@ -16,36 +17,52 @@ export function useTransactions() {
     // Category Logic
     const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
 
-    // Load Data
-    useEffect(() => {
-        const savedData = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
-        const savedCategories = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
+    // --- SUPABASE LOGIC (CLOUD) ---
 
-        if (savedData) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setTransactions(JSON.parse(savedData));
+    // 1. Fetch Transactions from Cloud
+    const fetchTransactions = useCallback(async () => {
+        // SQL: SELECT * FROM transactions ORDER BY date DESC
+        const { data, error } = await supabase
+            .from('transactions') // Matches your table name
+            .select('*')
+            .order('date', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching transactions:', error);
+        } else {
+            setTransactions(data as Transaction[]);
         }
+    }, []);
 
+    // 2. Run Fetch on Mount
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchTransactions();
+    }, [fetchTransactions]);
+
+
+    // --- LOCAL STORAGE LOGIC (CATEGORIES ONLY) ---
+    // We keep this for now because we don't have a 'categories' table in Supabase yet.
+
+    // Load Categories
+    useEffect(() => {
+        const savedCategories = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
         if (savedCategories) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setCategories(JSON.parse(savedCategories));
         }
-
         setIsLoaded(true);
-    }, [])
-
-    // Save Transactions
-    useEffect(() => {
-        if (isLoaded) {
-            localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
-        }
-    }, [transactions, isLoaded])
+    }, []);
 
     // Save Categories
     useEffect(() => {
         if (isLoaded) {
             localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories))
         }
-    }, [categories, isLoaded])
+    }, [categories, isLoaded]);
+
+
+    // --- ACTIONS ---
 
     const addCategory = (categoryName: string) => {
         if (categories.includes(categoryName)) {
@@ -55,6 +72,29 @@ export function useTransactions() {
         setCategories(prev => [...prev, categoryName])
     };
 
+    // CREATE (Insert)
+    const addTransaction = async (newTransaction: Omit<Transaction, "id">) => {
+        // 1. Optimistic Update (Optional: Show it immediately before DB confirms)
+        // For now, let's wait for DB to be safe.
+
+        // 2. Send to Supabase
+        const { data, error } = await supabase
+            .from('transactions')
+            .insert([newTransaction])
+            .select(); // <--- Important: Asks DB to send back the new row (with the ID)
+
+        if (error) {
+            console.error('Error adding transaction:', error);
+            alert("Failed to save!");
+        } else {
+            // 3. Update Local State with the REAL data from DB
+            const savedTransaction = data[0] as Transaction;
+            setTransactions((prev) => [savedTransaction, ...prev]);
+        }
+    };
+
+    // NOTE: These handle functions only update the UI state for now. 
+    // We will connect them to Supabase in the next step.
     const handleDelete = (id: number) => {
         setTransactions((prev) => prev.filter((t) => t.id !== id));
     };
@@ -67,19 +107,40 @@ export function useTransactions() {
         );
     }
 
-    const filteredTransactions = transactions.filter(t => {
-        return t.date && t.date.startsWith(selectedMonth);
-    });
+    // --- CALCULATIONS ---
 
-    const sortedTransactions = [...filteredTransactions].sort((a, b) => {
-        switch (sortBy) {
-            case "amount-asc": return a.amount - b.amount;
-            case "amount-desc": return b.amount - a.amount;
-            case "title-asc": return a.title.localeCompare(b.title);
-            case "title-desc": return b.title.localeCompare(a.title);
-            default: return 0;
-        }
-    });
+    const filteredTransactions = useMemo(() => {
+        return transactions.filter(t => t.date && t.date.startsWith(selectedMonth));
+    }, [transactions, selectedMonth]);
+
+    const sortedTransactions = useMemo(() => {
+        return [...filteredTransactions].sort((a, b) => {
+            switch (sortBy) {
+                case "amount-asc": return a.amount - b.amount;
+                case "amount-desc": return b.amount - a.amount;
+                case "title-asc": return a.title.localeCompare(b.title);
+                case "title-desc": return b.title.localeCompare(a.title);
+                default: return 0;
+            }
+        });
+    }, [filteredTransactions, sortBy]);
+
+    // Stats Logic
+    const stats = useMemo(() => {
+        return transactions.reduce(
+            (acc, t) => {
+                if (t.type === TRANSACTION_TYPES.INCOME) {
+                    acc.income += t.amount;
+                } else {
+                    acc.expense += t.amount;
+                }
+                return acc;
+            },
+            { income: 0, expense: 0 }
+        );
+    }, [transactions]);
+
+    const balance = stats.income - stats.expense;
 
     const categoryTotals = filteredTransactions
         .filter(t => t.type === TRANSACTION_TYPES.EXPENSE)
@@ -100,26 +161,10 @@ export function useTransactions() {
         }
     }, 0);
 
-    // Calculate All-Time Stats
-    const stats = useMemo(() => {
-        return transactions.reduce(
-            (acc, t) => {
-                if (t.type === TRANSACTION_TYPES.INCOME) {
-                    acc.income += t.amount;
-                } else {
-                    acc.expense += t.amount;
-                }
-                return acc;
-            },
-            { income: 0, expense: 0 }
-        );
-    }, [transactions]);
-
-    const balance = stats.income - stats.expense;
-
     return {
+        addTransaction,
         transactions,
-        setTransactions,
+        setTransactions, // We expose this so the UI can optimistic update
         sortedTransactions,
         categoryTotals,
         monthlyTotal,
@@ -135,5 +180,7 @@ export function useTransactions() {
         setShowSortMenu,
         stats,
         balance,
+        // Optional: Expose the refresh function if we need to manually reload data
+        refreshData: fetchTransactions
     };
 }

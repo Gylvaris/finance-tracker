@@ -5,7 +5,7 @@ import { TRANSACTION_TYPES } from "../lib/constants";
 type TransactionFormProps = {
   categories: string[];
   onAddCategory: (name: string) => void;
-  onAddTransaction: (transaction: Transaction) => void;
+  onAddTransaction: (transaction: Omit<Transaction, "id">) => void;
 };
 
 export default function TransactionForm({
@@ -34,8 +34,8 @@ export default function TransactionForm({
       return;
     }
 
-    const newTransaction: Transaction = {
-      id: Date.now(),
+    // We use Omit to say: "It's a Transaction, but WITHOUT the id"
+    const newTransaction: Omit<Transaction, "id"> = {
       title,
       amount: parsedAmount,
       category,
