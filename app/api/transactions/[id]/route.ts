@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/app/lib/supabase';
+import { createClient } from '@/app/utils/supabase/server';
 
 export async function DELETE(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const supabase = await createClient();
     const { id } = await params;
 
     const { error } = await supabase
@@ -23,6 +24,7 @@ export async function PUT(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const supabase = await createClient();
     const { id } = await params;
     const body = await request.json();
 
