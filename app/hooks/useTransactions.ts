@@ -8,7 +8,7 @@ export function useTransactions() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [sortBy, setSortBy] = useState("");
     const [showSortMenu, setShowSortMenu] = useState(false);
-    const [isLoaded] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false);
 
     const currentMonth = new Date().toISOString().slice(0, 7);
     const [selectedMonth, setSelectedMonth] = useState(currentMonth);
@@ -16,6 +16,8 @@ export function useTransactions() {
     const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
 
     const fetchTransactions = useCallback(async () => {
+        setIsLoaded(false); // <--- Start loading
+
         const { data, error } = await supabase
             .from('transactions')
             .select('*')
@@ -24,8 +26,10 @@ export function useTransactions() {
         if (error) {
             console.error('Error fetching transactions:', error);
         } else {
-            setTransactions(data as Transaction[]);
+            setTransactions(data as Transaction[]); // <--- Data loaded
         }
+
+        setIsLoaded(true); // <--- STOP loading (Must be outside if/else)
     }, []);
 
     const fetchCategories = useCallback(async () => {
@@ -208,6 +212,7 @@ export function useTransactions() {
         setShowSortMenu,
         stats,
         balance,
-        refreshData: fetchTransactions
+        refreshData: fetchTransactions,
+        isLoading: !isLoaded,
     };
 }
