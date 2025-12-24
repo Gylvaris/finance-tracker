@@ -23,7 +23,6 @@ export default function ExpensesPage() {
     setShowSortMenu,
   } = useTransactions();
 
-  // We accept everything EXCEPT the ID (Omit<Transaction, "id">)
   const handleAddTransaction = async (newTransaction: Omit<Transaction, "id">) => {
     await addTransaction(newTransaction);
   };

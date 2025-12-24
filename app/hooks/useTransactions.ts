@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Transaction } from "../types";
 import { STORAGE_KEYS, DEFAULT_CATEGORIES, TRANSACTION_TYPES } from "../lib/constants";
-import { supabase } from "../lib/supabase";
 
 export function useTransactions() {
     // State
@@ -16,43 +15,47 @@ export function useTransactions() {
     const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
 
     const fetchTransactions = useCallback(async () => {
-        setIsLoaded(false); // <--- Start loading
+        setIsLoaded(false);
 
-        const { data, error } = await supabase
-            .from('transactions')
-            .select('*')
-            .order('date', { ascending: false });
+        try {
+            const response = await fetch('/api/transactions');
 
-        if (error) {
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to fetch');
+            }
+
+            setTransactions(data);
+        } catch (error) {
             console.error('Error fetching transactions:', error);
-        } else {
-            setTransactions(data as Transaction[]); // <--- Data loaded
+        } finally {
+            setIsLoaded(true);
         }
-
-        setIsLoaded(true); // <--- STOP loading (Must be outside if/else)
     }, []);
 
     const fetchCategories = useCallback(async () => {
-        const { data, error } = await supabase
-            .from('categories')
-            .select('*')
-            .order('name', { ascending: true });
+        try {
+            const response = await fetch('/api/categories');
+            const data = await response.json();
 
-        if (error) {
-            console.error('Error fetching categories:', error);
-        } else {
-            if (data) {
-                const categoryNames = data.map((c: { name: string }) => c.name);
-
-                const uniqueCategories = Array.from(new Set([...DEFAULT_CATEGORIES, ...categoryNames]));
-                setCategories(uniqueCategories);
+            if (!response.ok) {
+                console.error('Error fetching categories:', data.error);
+                return;
             }
+
+            const categoryNames = data.map((c: { name: string }) => c.name);
+
+            const uniqueCategories = Array.from(new Set([...DEFAULT_CATEGORIES, ...categoryNames]));
+            setCategories(uniqueCategories);
+
+        } catch (error) {
+            console.error('Error fetching categories:', error);
         }
     }, []);
 
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchTransactions();
         fetchCategories();
     }, [fetchTransactions, fetchCategories]);
@@ -75,51 +78,68 @@ export function useTransactions() {
 
         setCategories((prev) => [...prev, categoryName]);
 
-        const { error } = await supabase
-            .from('categories')
-            .insert([{ name: categoryName }]);
+        try {
+            const response = await fetch('/api/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: categoryName }),
+            });
 
-        if (error) {
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to add category');
+            }
+        } catch (error) {
             console.error('Error adding category:', error);
             alert("Failed to save category!");
             fetchCategories();
         }
     };
 
-    // CREATE
     const addTransaction = async (newTransaction: Omit<Transaction, "id">) => {
+        try {
+            const response = await fetch('/api/transactions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newTransaction),
+            });
 
-        const { data, error } = await supabase
-            .from('transactions')
-            .insert([newTransaction])
-            .select();
+            const data = await response.json();
 
-        if (error) {
-            console.error('Error adding transaction:', error);
-            alert("Failed to save!");
-        } else {
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to add transaction');
+            }
+
             const savedTransaction = data[0] as Transaction;
             setTransactions((prev) => [savedTransaction, ...prev]);
+
+        } catch (error) {
+            console.error('Error adding transaction:', error);
+            alert("Failed to save!");
         }
     };
 
-    // DELETE
     const handleDelete = async (id: number) => {
         setTransactions((prev) => prev.filter((t) => t.id !== id));
 
-        const { error } = await supabase
-            .from('transactions')
-            .delete()
-            .eq('id', id);
+        try {
+            const response = await fetch(`/api/transactions/${id}`, {
+                method: 'DELETE',
+            });
 
-        if (error) {
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to delete');
+            }
+        } catch (error) {
             console.error('Error deleting transaction:', error);
             alert("Failed to delete!");
             fetchTransactions();
         }
     };
 
-    // UPDATE
     const editTransaction = async (id: number, updatedFields: Partial<Transaction>) => {
         setTransactions((prev) =>
             prev.map((t) =>
@@ -127,12 +147,20 @@ export function useTransactions() {
             )
         );
 
-        const { error } = await supabase
-            .from('transactions')
-            .update(updatedFields)
-            .eq('id', id);
+        try {
+            const response = await fetch(`/api/transactions/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updatedFields),
+            });
 
-        if (error) {
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to update');
+            }
+        } catch (error) {
             console.error('Error updating transaction:', error);
             alert("Failed to update!");
             fetchTransactions();
