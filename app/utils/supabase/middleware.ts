@@ -8,12 +8,9 @@ export const updateSession = async (request: NextRequest) => {
         },
     });
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!;
-
     const supabase = createServerClient(
-        supabaseUrl,
-        supabaseKey,
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!,
         {
             cookies: {
                 getAll() {
@@ -34,7 +31,23 @@ export const updateSession = async (request: NextRequest) => {
         }
     );
 
-    await supabase.auth.getUser();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user && !request.nextUrl.pathname.startsWith("/login") && !request.nextUrl.pathname.startsWith("/auth")) {
+        if (request.nextUrl.pathname !== "/") {
+            const url = request.nextUrl.clone();
+            url.pathname = "/login";
+            return NextResponse.redirect(url);
+        }
+    }
+
+    if (user && request.nextUrl.pathname.startsWith("/login")) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/dashboard";
+        return NextResponse.redirect(url);
+    }
 
     return supabaseResponse;
 };
