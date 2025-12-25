@@ -3,9 +3,15 @@ import { createClient } from '@/app/utils/supabase/server';
 
 export async function GET() {
     const supabase = await createClient();
+
     const { data, error } = await supabase
         .from('transactions')
-        .select('*')
+        .select(`
+      *,
+      categories (
+        name
+      )
+    `)
         .order('date', { ascending: false });
 
     if (error) {
