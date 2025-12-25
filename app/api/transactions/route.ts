@@ -1,17 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/app/utils/supabase/server';
+import { TablesInsert } from '@/app/types/supabase';
 
 export async function GET() {
     const supabase = await createClient();
 
     const { data, error } = await supabase
         .from('transactions')
-        .select(`
-      *,
-      categories (
-        name
-      )
-    `)
+        .select('*, categories(name)')
         .order('date', { ascending: false });
 
     if (error) {
@@ -23,7 +19,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
     const supabase = await createClient();
-    const body = await request.json();
+    const body = await request.json() as TablesInsert<'transactions'>;
 
     const { data, error } = await supabase
         .from('transactions')

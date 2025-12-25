@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Transaction } from "../types";
+import { Tables } from "../types/supabase";
+import { TransactionInsert } from "../types";
 import { TRANSACTION_TYPES } from "../lib/constants";
 
 type TransactionFormProps = {
-  categories: string[];
+  categories: Tables<"categories">[];
+  onAddTransaction: (transaction: TransactionInsert) => void;
   onAddCategory: (name: string) => void;
-  onAddTransaction: (transaction: Omit<Transaction, "id">) => void;
 };
 
 export default function TransactionForm({
@@ -20,13 +21,13 @@ export default function TransactionForm({
   // State
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("");
+  const [categoryId, setCategoryId] = useState<number | "">("");
   const [date, setDate] = useState(today);
   const [type, setType] = useState<"income" | "expense">(TRANSACTION_TYPES.EXPENSE);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !amount || !category || !date) return;
+    if (!title || !amount || !categoryId || !date) return;
 
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
@@ -34,20 +35,20 @@ export default function TransactionForm({
       return;
     }
 
-    // We use Omit to say: "It's a Transaction, but WITHOUT the id"
-    const newTransaction: Omit<Transaction, "id"> = {
+    const newTransaction: TransactionInsert = {
       title,
       amount: parsedAmount,
-      category,
+      category_id: Number(categoryId),
       date,
       type,
     };
 
     onAddTransaction(newTransaction);
 
+    // Reset
     setTitle("");
     setAmount("");
-    setCategory("");
+    setCategoryId("");
     setDate(today);
   };
 
@@ -56,6 +57,7 @@ export default function TransactionForm({
       {/* Type Toggles */}
       <div className="gap-4 mb-6 bg-neutral-900 p-1 rounded-lg border border-neutral-800 inline-flex">
         <button
+          type="button"
           onClick={() => setType(TRANSACTION_TYPES.EXPENSE)}
           className={`px-6 py-2 rounded-md font-medium transition ${
             type === TRANSACTION_TYPES.EXPENSE
@@ -66,6 +68,7 @@ export default function TransactionForm({
           Expense
         </button>
         <button
+          type="button"
           onClick={() => setType(TRANSACTION_TYPES.INCOME)}
           className={`px-6 py-2 rounded-md font-medium transition ${
             type === TRANSACTION_TYPES.INCOME
@@ -115,28 +118,26 @@ export default function TransactionForm({
           <label className="block mb-1 text-sm font-medium">Category</label>
           <div className="flex gap-2">
             <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")}
               className="w-full p-2 bg-neutral-900 text-white border border-gray-600 rounded-md appearance-none"
             >
               <option value="">Select a category</option>
               {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
                 </option>
               ))}
             </select>
             <button
-              onClick={(e) => {
-                e.preventDefault();
+              type="button"
+              onClick={() => {
                 const name = prompt("Enter new category name:");
-
                 if (name && name.trim().length > 0) {
                   onAddCategory(name);
-                  setCategory(name);
                 }
               }}
-              className="bg-gray-700 px-3 rounded"
+              className="bg-gray-700 px-3 rounded text-white"
             >
               +
             </button>

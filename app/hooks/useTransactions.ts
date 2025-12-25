@@ -1,10 +1,15 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Transaction } from "../types";
-import { STORAGE_KEYS, DEFAULT_CATEGORIES, TRANSACTION_TYPES } from "../lib/constants";
+import { STORAGE_KEYS, TRANSACTION_TYPES } from "../lib/constants";
+import { Tables, TablesInsert } from "../types/supabase";
+
+type TransactionWithCategory = Tables<'transactions'> & {
+    categories: { name: string } | null;
+};
 
 export function useTransactions() {
     // State
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [transactions, setTransactions] = useState<TransactionWithCategory[]>([]);
     const [sortBy, setSortBy] = useState("");
     const [showSortMenu, setShowSortMenu] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
@@ -12,7 +17,7 @@ export function useTransactions() {
     const currentMonth = new Date().toISOString().slice(0, 7);
     const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
-    const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+    const [categories, setCategories] = useState<Tables<'categories'>[]>([]);
 
     const fetchTransactions = useCallback(async () => {
         setIsLoaded(false);
@@ -38,17 +43,9 @@ export function useTransactions() {
         try {
             const response = await fetch('/api/categories');
             const data = await response.json();
+            if (!response.ok) return;
 
-            if (!response.ok) {
-                console.error('Error fetching categories:', data.error);
-                return;
-            }
-
-            const categoryNames = data.map((c: { name: string }) => c.name);
-
-            const uniqueCategories = Array.from(new Set([...DEFAULT_CATEGORIES, ...categoryNames]));
-            setCategories(uniqueCategories);
-
+            setCategories(data);
         } catch (error) {
             console.error('Error fetching categories:', error);
         }
@@ -71,12 +68,10 @@ export function useTransactions() {
     // --- ACTIONS ---
 
     const addCategory = async (categoryName: string) => {
-        if (categories.includes(categoryName)) {
+        if (categories.some(c => c.name === categoryName)) {
             alert("Don't add duplicates");
             return;
         }
-
-        setCategories((prev) => [...prev, categoryName]);
 
         try {
             const response = await fetch('/api/categories', {
@@ -96,13 +91,11 @@ export function useTransactions() {
         }
     };
 
-    const addTransaction = async (newTransaction: Omit<Transaction, "id">) => {
+    const addTransaction = async (newTransaction: TablesInsert<'transactions'>) => {
         try {
             const response = await fetch('/api/transactions', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newTransaction),
             });
 
@@ -204,12 +197,11 @@ export function useTransactions() {
 
     const categoryTotals = filteredTransactions
         .filter(t => t.type === TRANSACTION_TYPES.EXPENSE)
-        .reduce((acc: Record<string, number>, t) => {
-            const category = t.category;
-            if (!acc[category]) {
-                acc[category] = 0;
-            }
-            acc[category] += t.amount;
+        .reduce((acc: Record<string, number>, t: Transaction) => {
+            const categoryName = t.categories?.name || "Uncategorized";
+
+            if (!acc[categoryName]) acc[categoryName] = 0;
+            acc[categoryName] += t.amount;
             return acc;
         }, {});
 

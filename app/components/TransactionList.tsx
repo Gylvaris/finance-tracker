@@ -21,7 +21,7 @@ export default function TransactionList({ transactions, onDelete, onEdit }: Tran
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <span>{formatDate(exp.date)}</span>
               <span>•</span>
-              <span>{exp.category}</span>
+              <span>{exp.categories?.name || "Uncategorized"}</span>
             </div>
           </div>
 
@@ -53,7 +53,6 @@ export default function TransactionList({ transactions, onDelete, onEdit }: Tran
                   onEdit(exp.id, {
                     title: newTitle,
                     amount: parsedNewAmount,
-                    category: newCategory,
                     date: newDate,
                   });
                 }
