@@ -4,7 +4,7 @@ import { useTransactions } from "../hooks/useTransactions";
 import { formatCurrency } from "../lib/formatters";
 import TransactionList from "../components/TransactionList";
 import TransactionForm from "../components/TransactionForm";
-import { Transaction } from "../types";
+import { TransactionInsert } from "../types";
 
 export default function ExpensesPage() {
   const {
@@ -23,7 +23,7 @@ export default function ExpensesPage() {
     setShowSortMenu,
   } = useTransactions();
 
-  const handleAddTransaction = async (newTransaction: Omit<Transaction, "id">) => {
+  const handleAddTransaction = async (newTransaction: TransactionInsert) => {
     await addTransaction(newTransaction);
   };
 

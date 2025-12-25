@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Transaction } from "../types";
 import { STORAGE_KEYS, TRANSACTION_TYPES } from "../lib/constants";
-import { Tables, TablesInsert } from "../types/supabase";
+import { Tables } from "../types/supabase";
+import { TransactionInsert } from "../types";
 
 type TransactionWithCategory = Tables<'transactions'> & {
     categories: { name: string } | null;
@@ -91,13 +92,13 @@ export function useTransactions() {
         }
     };
 
-    const addTransaction = async (newTransaction: TablesInsert<'transactions'>) => {
+    const addTransaction = async (newTransaction: TransactionInsert) => {
         try {
             const response = await fetch('/api/transactions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newTransaction),
-            });
+            });;
 
             const data = await response.json();
 

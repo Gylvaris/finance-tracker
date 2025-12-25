@@ -39,10 +39,13 @@ export default function TransactionList({ transactions, onDelete, onEdit }: Tran
               onClick={() => {
                 const newTitle = prompt("Enter new title", exp.title);
                 const newAmount = prompt("Enter new amount", exp.amount.toString());
-                const newCategory = prompt("Enter new category", exp.category);
+                const newCategoryName = prompt(
+                  "Enter new category name",
+                  exp.categories?.name || ""
+                );
                 const newDate = prompt("Enter new date", exp.date);
 
-                if (newTitle && newAmount && newCategory && newDate) {
+                if (newTitle && newAmount && newCategoryName && newDate) {
                   const parsedNewAmount = parseFloat(newAmount);
 
                   if (isNaN(parsedNewAmount) || parsedNewAmount <= 0) {

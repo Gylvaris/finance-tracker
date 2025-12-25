@@ -11,7 +11,7 @@ export async function DELETE(
     const { error } = await supabase
         .from('transactions')
         .delete()
-        .eq('id', id);
+        .eq('id', Number(id));
 
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
@@ -31,7 +31,7 @@ export async function PUT(
     const { error } = await supabase
         .from('transactions')
         .update(body)
-        .eq('id', id);
+        .eq('id', Number(id));
 
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
