@@ -36,6 +36,7 @@ export type Database = {
         Row: {
           amount: number
           category: string
+          category_id: number | null
           date: string
           id: number
           title: string
@@ -45,6 +46,7 @@ export type Database = {
         Insert: {
           amount: number
           category: string
+          category_id?: number | null
           date: string
           id?: number
           title: string
@@ -54,13 +56,22 @@ export type Database = {
         Update: {
           amount?: number
           category?: string
+          category_id?: number | null
           date?: string
           id?: number
           title?: string
           type?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transactions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
