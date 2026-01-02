@@ -14,7 +14,6 @@ export default function ExpensesPage() {
     categories,
     addCategory,
     setSelectedMonth,
-    categoryTotals,
     monthlyTotal,
     handleDelete,
     editTransaction,
@@ -52,21 +51,6 @@ export default function ExpensesPage() {
         <h2 className="text-lg font-semibold mb-1">Total Expenses</h2>
         <p className="text-3xl font-bold">{formatCurrency(monthlyTotal)}</p>
       </section>
-
-      {/* Category Breakdown */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        {Object.entries(categoryTotals)
-          .sort()
-          .map(([cat, amount]) => (
-            <div
-              key={cat}
-              className={`bg-neutral-900 border border-neutral-700 p-4 rounded-md flex justify-between`}
-            >
-              <span className="text-gray-400">{cat}</span>
-              <span className="font-bold">{formatCurrency(amount)}</span>
-            </div>
-          ))}
-      </div>
 
       {/* Header + Sort */}
       <div className="flex justify-between items-center mb-3">
