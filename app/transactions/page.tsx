@@ -27,9 +27,6 @@ export default function ExpensesPage() {
     await addTransaction(newTransaction);
   };
 
-  // Reusable UI classes
-  const cardClass = "bg-neutral-900 border border-neutral-700 p-4 rounded-md";
-
   return (
     <main className="p-8 max-w-xl mx-auto font-sans text-white">
       <div className="flex justify-end mb-4">
@@ -51,7 +48,7 @@ export default function ExpensesPage() {
       <h1 className="text-4xl text-amber-500 font-bold mb-8">Expenses</h1>
 
       {/* Total */}
-      <section className={`${cardClass} mb-8`}>
+      <section className={`bg-neutral-900 border border-neutral-700 p-4 rounded-md mb-8`}>
         <h2 className="text-lg font-semibold mb-1">Total Expenses</h2>
         <p className="text-3xl font-bold">{formatCurrency(monthlyTotal)}</p>
       </section>
@@ -61,7 +58,10 @@ export default function ExpensesPage() {
         {Object.entries(categoryTotals)
           .sort()
           .map(([cat, amount]) => (
-            <div key={cat} className={`${cardClass} flex justify-between`}>
+            <div
+              key={cat}
+              className={`bg-neutral-900 border border-neutral-700 p-4 rounded-md flex justify-between`}
+            >
               <span className="text-gray-400">{cat}</span>
               <span className="font-bold">{formatCurrency(amount)}</span>
             </div>
