@@ -1,7 +1,6 @@
 "use client";
 
 import { useTransactions } from "../hooks/useTransactions";
-import { formatCurrency } from "../lib/formatters";
 import TransactionList from "../components/TransactionList";
 import TransactionForm from "../components/TransactionForm";
 import { TransactionInsert } from "../types";
@@ -14,7 +13,6 @@ export default function ExpensesPage() {
     categories,
     addCategory,
     setSelectedMonth,
-    monthlyTotal,
     handleDelete,
     editTransaction,
     setSortBy,
@@ -43,14 +41,6 @@ export default function ExpensesPage() {
         onAddCategory={addCategory}
         onAddTransaction={handleAddTransaction}
       />
-
-      <h1 className="text-4xl text-amber-500 font-bold mb-8">Expenses</h1>
-
-      {/* Total */}
-      <section className={`bg-neutral-900 border border-neutral-700 p-4 rounded-md mb-8`}>
-        <h2 className="text-lg font-semibold mb-1">Total Expenses</h2>
-        <p className="text-3xl font-bold">{formatCurrency(monthlyTotal)}</p>
-      </section>
 
       {/* Header + Sort */}
       <div className="flex justify-between items-center mb-3">
