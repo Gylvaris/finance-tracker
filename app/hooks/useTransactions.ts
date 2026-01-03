@@ -206,21 +206,12 @@ export function useTransactions() {
             return acc;
         }, {});
 
-    const monthlyTotal = filteredTransactions.reduce((sum, t) => {
-        if (t.type === TRANSACTION_TYPES.INCOME) {
-            return sum + t.amount;
-        } else {
-            return sum - t.amount;
-        }
-    }, 0);
-
     return {
         addTransaction,
         transactions,
         setTransactions,
         sortedTransactions,
         categoryTotals,
-        monthlyTotal,
         selectedMonth,
         setSelectedMonth,
         categories,
