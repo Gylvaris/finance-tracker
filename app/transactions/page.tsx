@@ -44,7 +44,7 @@ export default function ExpensesPage() {
 
       {/* Header + Sort */}
       <div className="flex justify-between items-center mb-3">
-        <h2 className="text-xl font-semibold">Transactions List</h2>
+        <h2 className="text-xl font-semibold">Transaction list</h2>
 
         <div className="relative">
           <button
